@@ -60,10 +60,16 @@ if method == "install" then
 		local file = {}
 		for line in response.body:gmatch("[^\r\n]+") do
 			local parsed = redString.split(line)
-			file.name = parsed[1]
-			file.installLocation = parsed[2]
-			file.has = parsed[3] 
-			sovietProtocol.send(PROTOCOL_CHANNEL, LISTEN_CHANNEL, "install", package, file.name)
+			if parsed[1] == "depends:" then
+				file.name = parsed[3]
+				file.package = parsed[2]
+			else
+				file.name = parsed[1]
+				file.installLocation = parsed[2]
+				file.hash = parsed[3]
+				file.package = package
+			end
+			sovietProtocol.send(PROTOCOL_CHANNEL, LISTEN_CHANNEL, "install", file.package, file.name)
 			replyChannel, response = sovietProtocol.listen()
 
 			if response.method == "file" then

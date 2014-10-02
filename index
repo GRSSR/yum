@@ -1,1 +1,6 @@
+# components
 yum yum.lua /yum
+
+#deps
+api:redString
+api:sovietProtocol
