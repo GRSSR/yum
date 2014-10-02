@@ -40,6 +40,12 @@ local function parsePackage(response)
 end
 
 sovietProtocol.init(PROTOCOL_CHANNEL, LISTEN_CHANNEL)
+
+if not sovietProtocol.hello(PROTOCOL_CHANNEL) then
+	print("Yum server is asleep :(")
+	error()
+end
+
 if method == "install" then
 	if not package then installHelp() end
 	if file then

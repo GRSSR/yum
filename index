@@ -1,1 +1,1 @@
-yum /yum
+yum yum.lua /yum
