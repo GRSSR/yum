@@ -13,13 +13,14 @@ file = args[3]
 
 local function installFile(location, file)
 	print("installing "..location)
-	f = io.open(location, "w")
+	local f = io.open(location, "w")
 	f:write(file)
 	f:close()
 end
 
 local function help()
 	print("usage yum install|list")
+	error()
 end
 
 local function installHelp()
@@ -28,7 +29,7 @@ local function installHelp()
 end
 
 local function parsePackage(response)
-	files = {}
+	local files = {}
 	for line in response.body:gmatch("[^\r\n]+") do
 		local parsed = redString.split(line)
 		files[#files+1] = {}
@@ -41,7 +42,7 @@ end
 
 sovietProtocol.init(PROTOCOL_CHANNEL, LISTEN_CHANNEL)
 
-if not sovietProtocol.hello(PROTOCOL_CHANNEL) then
+if not sovietProtocol.hello(PROTOCOL_CHANNEL, "yum") then
 	print("Yum server is asleep :(")
 	error()
 end
