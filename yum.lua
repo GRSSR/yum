@@ -40,9 +40,18 @@ local function parsePackage(response)
 	return files
 end
 
-sovietProtocol.init(PROTOCOL_CHANNEL, LISTEN_CHANNEL)
+local yum  = nil
+for side, modem in pairs(sovietProtocol.findModems()) do 
+	local possible = sovietProtocol.Protocol:new("yum", PROTOCOL_CHANNEL, LISTEN_CHANNEL, side)
+	if possible:hello() then
+		yum = possible
+		break;
+	else
+		possible:tearDown()
+	end
+end
 
-if not sovietProtocol.hello(PROTOCOL_CHANNEL, "yum") then
+if not yum:hello() then
 	print("Yum server is asleep :(")
 	error()
 end
@@ -52,9 +61,9 @@ if method == "install" then
 	if file then
 		print("Getting file "..file)
 	end
-	sovietProtocol.send(PROTOCOL_CHANNEL, LISTEN_CHANNEL, "install", package, file)
+	yum:send("install", package, file)
 
-	replyChannel, response = sovietProtocol.listen()
+	replyChannel, response = yum:listen()
 	if response.method == "file" then
 		installFile(response.id, response.body)
 	elseif response.method == "package_list" then
@@ -70,8 +79,8 @@ if method == "install" then
 				file.hash = parsed[3]
 				file.package = package
 			end
-			sovietProtocol.send(PROTOCOL_CHANNEL, LISTEN_CHANNEL, "install", file.package, file.name)
-			replyChannel, response = sovietProtocol.listen()
+			yum:send("install", file.package, file.name)
+			replyChannel, response = yum:listen()
 
 			if response.method == "file" then
 				installFile(response.id, response.body)
@@ -79,8 +88,8 @@ if method == "install" then
 		end
 	end
 elseif method ==  "list" then
-	sovietProtocol.send(PROTOCOL_CHANNEL, LISTEN_CHANNEL, "list", package)
-	local reply, response = sovietProtocol.listen()
+	yum:send("list", package)
+	local reply, response = yum:listen()
 	local fileList = parsePackage(response)
 	if package then
 		print("files in package "..package..":")
