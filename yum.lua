@@ -91,6 +91,7 @@ elseif method ==  "list" then
 	yum:send("list", package)
 	local reply, response = yum:listen()
 	local fileList = parsePackage(response)
+
 	if package then
 		print("files in package "..package..":")
 	else
@@ -98,6 +99,17 @@ elseif method ==  "list" then
 	end
 	for i, file in pairs(fileList) do
 		print (file.name)
+	end
+elseif method == "replicate" then
+	yum:send("replicate", "list")
+	local replyChannel, response = yum:listen()
+	if response.method == "file_list" then
+		print(response.body)
+		for fileName in response.body:gmatch("[^\r\n]+") do
+			yum:send("replicate", fileName)
+			local reply, response = yum:listen()
+			installFile(response.id, response.body)
+		end
 	end
 else
 	help()
