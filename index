@@ -1,6 +1,8 @@
 # components
-yum yum.lua /yum
+yum yum.lua /.yum/yum
 
-#deps
-api:redString
-api:sovietProtocol
+alias: yum /.yum/yum
+
+#dependancies
+package: api
+package: yggdrasil

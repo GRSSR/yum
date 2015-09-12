@@ -1,15 +1,23 @@
 PROTOCOL_CHANNEL = 137
 LISTEN_CHANNEL = os.getComputerID()
-
 os.loadAPI("api/redString")
 os.loadAPI("api/sovietProtocol")
+os.loadAPI('/.sys/yggdrasil/yggdrasil')
+
+if not yggdrasil.namespace_exists('yum') then
+	yggdrasil.namespace_create('yum')
+end
+
+local i_yum = yggdrasil.namespace_open('yum')
 
 sovietProtocol.setDebugLevel(0)
-args = {...}
+local args = {...}
 
-method = args[1]
-package = args[2]
-file = args[3]
+local yum  = nil
+
+local method = args[1]
+local package = args[2]
+local file = args[3]
 
 local function installFile(location, file)
 	print("installing "..location)
@@ -18,8 +26,41 @@ local function installFile(location, file)
 	f:close()
 end
 
+local function install_package(name)
+	print('installing '..name)
+	local file = {}
+	yum:send("install", name)
+	replyChannel, response = yum:listen()
+	if response.method == "package_list" then
+		for line in response.body:gmatch("[^\r\n]+") do
+			local parsed = redString.split(line)
+			if parsed[1] == "package" then
+				install_package(parsed[2])
+			elseif parsed[1] == "alias" then
+				if NONIX then
+					print('Setting up alias '..parsed[2])
+					nonix.register_alias(parsed[2], parsed[3])
+				end
+			else
+				file.name = parsed[1]
+				file.installLocation = parsed[2]
+				file.hash = parsed[3]
+				file.package = name
+				yum:send("install", file.package, file.name)
+				replyChannel, response = yum:listen()
+				if response.method == "file" then
+					installFile(response.id, response.body)
+				end
+			end
+		end
+	else
+		print('not a package')
+		error()
+	end
+end
+
 local function help()
-	print("usage yum install|list")
+	print("usage yum install|list|replicate")
 	error()
 end
 
@@ -40,7 +81,7 @@ local function parsePackage(response)
 	return files
 end
 
-local yum  = nil
+
 for side, modem in pairs(sovietProtocol.findModems()) do 
 	local possible = sovietProtocol.Protocol:new("yum", PROTOCOL_CHANNEL, LISTEN_CHANNEL, side)
 	if possible:hello() then
@@ -58,35 +99,8 @@ end
 
 if method == "install" then
 	if not package then installHelp() end
-	if file then
-		print("Getting file "..file)
-	end
-	yum:send("install", package, file)
+	install_package(package)
 
-	replyChannel, response = yum:listen()
-	if response.method == "file" then
-		installFile(response.id, response.body)
-	elseif response.method == "package_list" then
-		local file = {}
-		for line in response.body:gmatch("[^\r\n]+") do
-			local parsed = redString.split(line)
-			if parsed[1] == "depends:" then
-				file.name = parsed[3]
-				file.package = parsed[2]
-			else
-				file.name = parsed[1]
-				file.installLocation = parsed[2]
-				file.hash = parsed[3]
-				file.package = package
-			end
-			yum:send("install", file.package, file.name)
-			replyChannel, response = yum:listen()
-
-			if response.method == "file" then
-				installFile(response.id, response.body)
-			end
-		end
-	end
 elseif method ==  "list" then
 	yum:send("list", package)
 	local reply, response = yum:listen()
