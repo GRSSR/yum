@@ -8,13 +8,13 @@ YUM_ERRORS = {
 
 if not yggdrasil.namespace_exists('yum') then
 	yggdrasil.namespace_create('yum')
+	local i_yum = yggdrasil.namespace_open('yum')
+	i_yum.installed_packages = yggdrasil.new_node()
 end
 
 local i_yum = yggdrasil.namespace_open('yum')
 
 local args = {...}
-
-local yum  = nil
 
 local method = args[1]
 local package = args[2]
@@ -74,6 +74,21 @@ function Package:install()
 		local local_destination = io.open(file_info.install_location, 'w')
 		local_destination:write(file:readAll())
 		local_destination:close()
+	end
+
+	i_yum.installed_packages[self.name] = {
+		files = self.files,
+		version = self.version,
+		dependants = {},
+		depends = self.dependancies
+	}
+
+	for _, name in pairs(self.dependancies) do
+		if i_yum.installed_packages[name].dependants[self.name] == nil then
+			local value = i_yum.installed_packages[name]
+			value.dependants[self.name] = true
+			i_yum.installed_packages[name] = value
+		end
 	end
 
 end
