@@ -23,7 +23,7 @@ local sources = {
 
 local Package = {}
 
-local function Package:new(package_name)
+function Package:new(package_name)
 	local obj = {
 		name = package_name,
 		version = nil,
@@ -37,8 +37,6 @@ local function Package:new(package_name)
 	return obj
 end
 
-
-
 function Package:get_dependancies()
 	for _, dependancy in pairs(self.dependancies) do
 		local dependancy_pkg = Package:new(dependancy)
@@ -46,9 +44,9 @@ function Package:get_dependancies()
 	end
 end
 
-local function Package:retrieve_index()
+function Package:retrieve_index()
 	local index = http.get(self.base_url .. "index")
-	if a == nil then
+	if index == nil then
 		return YUM_ERRORS.PACKAGE_NOT_EXISTS
 	end
 
@@ -71,14 +69,15 @@ function Package:install()
 	self:get_dependancies()
 
 	for _, file_info in pairs(self.files) do
-		print("getting ".. file_name)
-		local file = http.get(self.base_url .. file.repo_location)
-		local local_destination = io.open(file.install_location, 'w')
+		print("getting ".. file_info.install_location)
+		local file = http.get(self.base_url .. file_info.repo_location)
+		local local_destination = io.open(file_info.install_location, 'w')
 		local_destination:write(file:readAll())
 		local_destination:close()
 	end
 
 end
+
 
 function Package:update()
 end
