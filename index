@@ -1,8 +1,16 @@
-# components
-yum yum.lua /.yum/yum
-
-alias: yum /.yum/yum
-
-#dependancies
-package: api
-package: yggdrasil
+{
+	dependancies = {
+		"api",
+		"yggdrasil"
+	},
+	files = {
+		{
+			install_location = "/.sys/yum/yum",
+			repo_location = "yum.lua"
+		}
+	},
+	aliases = {
+		yum = "/.sys/yum/yum"
+	},
+	version = "2.0.0"
+}
