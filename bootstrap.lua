@@ -68,3 +68,5 @@ local err = pkg:install()
 if err then
 	print("oops")
 end
+
+shell.run("/.sys/yum/yum", "install", "yum")
