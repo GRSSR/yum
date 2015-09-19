@@ -54,6 +54,7 @@ function Package:retrieve_index()
 	self.dependancies = index_table.dependancies
 	self.files = index_table.files
 	self.version = index_table.version
+	self.aliases = index_table.aliases
 
 	return YUM_ERRORS.NO_ERROR
 end
@@ -80,7 +81,8 @@ function Package:install()
 		files = self.files,
 		version = self.version,
 		dependants = {},
-		depends = self.dependancies
+		depends = self.dependancies,
+		aliases = self.aliases
 	}
 
 	for _, name in pairs(self.dependancies) do
@@ -122,7 +124,7 @@ if method == "install" then
 		print("oops")
 	end
 
-elseif method ==  "list" then
+elseif method == "list" then
 	print("NYI")
 else
 	help()
